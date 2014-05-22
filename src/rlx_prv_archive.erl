@@ -94,14 +94,12 @@ update_tar(State, TempDir, OutputDir, Name, Vsn, ErtsVersion) ->
     TarFile = filename:join(OutputDir, Name++"-"++Vsn++".tar.gz"),
     file:rename(filename:join(OutputDir, Name++".tar.gz"), TarFile),
     erl_tar:extract(TarFile, [{cwd, TempDir}, compressed]),
+    %% Remove releases/ from TempDir
+    ec_file:remove(filename:join(TempDir, "releases"), [recursive]),
     ok =
         erl_tar:create(TarFile,
                        [{"lib", filename:join(TempDir, "lib")},
-                        {"releases", filename:join(TempDir, "releases")},
-                        {filename:join(["releases", "RELEASES"]),
-                         filename:join([OutputDir, "releases", "RELEASES"])},
-                        {filename:join(["releases", Vsn, "vm.args"]),
-                         filename:join([OutputDir, "releases", Vsn, "vm.args"])},
+                        {"releases", filename:join(OutputDir, "releases")},
                         {"bin", filename:join([OutputDir, "bin"])} |
                         case rlx_state:get(State, include_erts, true) of
                             false ->
